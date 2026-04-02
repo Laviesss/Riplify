@@ -9,7 +9,8 @@ DEFAULT_CONFIG = {
     "output_folder": str(Path.home() / "Music" / "Riplify"),
     "audio_format": "mp3",
     "audio_quality": "320kbps",
-    "ffmpeg_path": "ffmpeg"
+    "ffmpeg_path": "ffmpeg",
+    "spotify_export_folder": ""
 }
 
 def ensure_config_dir():

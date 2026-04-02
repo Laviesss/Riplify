@@ -14,12 +14,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const queueCount = document.getElementById('queueCount');
     const downloadPlaylistBtn = document.getElementById('downloadPlaylistBtn');
     const likedSongsBtn = document.getElementById('likedSongsBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const emptyState = document.getElementById('emptyState');
+    const tracksView = document.getElementById('tracksView');
 
     // Fetch and display playlists
     async function fetchPlaylists() {
-        const res = await fetch('/api/playlists');
-        playlists = await res.json();
-        renderPlaylists(playlists);
+        try {
+            const res = await fetch('/api/playlists');
+            playlists = await res.json();
+
+            if (playlists.length === 0) {
+                // Potential empty state if no folder set or no files found
+                // We should check if folder is actually set in config via another call or just assume
+                // But for now, if 0 playlists and no liked tracks, show empty
+                renderPlaylists([]);
+            } else {
+                emptyState.classList.add('hidden');
+                tracksView.classList.remove('hidden');
+                renderPlaylists(playlists);
+            }
+        } catch (e) {
+            console.error("Failed to fetch playlists", e);
+        }
     }
 
     function renderPlaylists(list) {
@@ -27,12 +44,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const items = playlistList.querySelectorAll('.playlist-item');
         items.forEach(i => i.remove());
 
+        if (list.length === 0) {
+            // Check if liked songs also empty?
+            // For now just render the list
+        }
+
         list.forEach(p => {
             const div = document.createElement('div');
             div.className = `playlist-item flex items-center p-3 hover:bg-[#2a2a2a] cursor-pointer transition border-l-4 border-transparent ${currentPlaylistId === p.id ? 'active bg-[#2a2a2a] border-[#7B2FBE]' : ''}`;
             div.dataset.id = p.id;
             div.innerHTML = `
-                <img src="${p.image || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded shadow-md mr-3 object-cover">
+                <div class="w-10 h-10 bg-[#2a2a2a] rounded shadow-md mr-3 flex items-center justify-center text-lg">📁</div>
                 <div class="overflow-hidden">
                     <div class="font-medium text-sm truncate">${p.name}</div>
                     <div class="text-xs text-gray-500">${p.count} tracks</div>
@@ -53,8 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         tracksTitle.textContent = p.name;
-        tracksCover.style.backgroundImage = `url(${p.image || 'https://via.placeholder.com/200'})`;
-        tracksCover.style.backgroundSize = 'cover';
+        tracksCover.innerHTML = p.id === 'liked' ? '❤️' : '📁';
         tracksMeta.textContent = `${p.count} tracks`;
         playlistActions.classList.remove('hidden');
 
@@ -68,6 +89,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderTracks(tracks) {
         trackList.innerHTML = '';
+        if (tracks.length === 0) {
+            trackList.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-500">No tracks found in this playlist.</td></tr>';
+            return;
+        }
+
         tracks.forEach((t, index) => {
             const tr = document.createElement('tr');
             tr.className = 'group';
@@ -75,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-6 py-4 text-center text-gray-500 font-medium">${index + 1}</td>
                 <td class="px-6 py-4">
                     <div class="flex items-center">
-                        <img src="${t.image || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded mr-4">
+                        <div class="w-10 h-10 bg-[#1a1a1a] rounded mr-4 flex items-center justify-center text-xs">🎵</div>
                         <div>
                             <div class="text-white font-semibold text-sm">${t.name}</div>
                             <div class="text-xs text-gray-500">${t.artist}</div>
@@ -83,16 +109,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </td>
                 <td class="px-6 py-4 text-gray-500 text-sm truncate max-w-xs">${t.album}</td>
-                <td class="px-6 py-4 text-gray-500 text-sm">${formatDuration(t.duration)}</td>
+                <td class="px-6 py-4 text-gray-500 text-sm">${t.artist}</td>
                 <td class="px-6 py-4 text-right">
-                    <button class="download-track-btn opacity-0 group-hover:opacity-100 bg-[#7B2FBE] hover:bg-[#9B59B6] text-white p-2 rounded-full transition shadow-md" data-id="${t.id}" data-name="${t.name}">
+                    <button class="download-track-btn opacity-0 group-hover:opacity-100 bg-[#7B2FBE] hover:bg-[#9B59B6] text-white p-2 rounded-full transition shadow-md" data-uri="${t.uri}" data-name="${t.name}">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                     </button>
                 </td>
             `;
             tr.querySelector('.download-track-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
-                downloadItem('track', t.id, t.name);
+                downloadItem('track', t.uri, `${t.artist} - ${t.name}`);
             });
             trackList.appendChild(tr);
         });
@@ -144,12 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function formatDuration(ms) {
-        const minutes = Math.floor(ms / 60000);
-        const seconds = ((ms % 60000) / 1000).toFixed(0);
-        return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
-    }
-
     playlistSearch.addEventListener('input', (e) => {
         const q = e.target.value.toLowerCase();
         const filtered = playlists.filter(p => p.name.toLowerCase().includes(q));
@@ -164,6 +184,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentPlaylistId) {
             downloadItem('playlist', currentPlaylistId, tracksTitle.textContent);
         }
+    });
+
+    refreshBtn.addEventListener('click', () => {
+        fetchPlaylists();
     });
 
     // Initial fetch
