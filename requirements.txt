@@ -1,0 +1,6 @@
+flask
+spotipy
+spotdl
+PyQt6
+PyQt6-WebEngine
+python-dotenv

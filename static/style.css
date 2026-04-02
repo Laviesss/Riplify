@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #2a2a2a;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #3a3a3a;
+}
+
+/* Transitions */
+.playlist-item {
+    transition: all 0.2s ease;
+}
+
+.playlist-item.active {
+    background-color: #2a2a2a;
+    border-left-color: #7B2FBE;
+}
+
+/* Table layout */
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+tr:hover td {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+td {
+    transition: background-color 0.1s;
+}

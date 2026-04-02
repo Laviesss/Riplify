@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riplify - Library</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-[#0f0f0f] text-white flex flex-col h-screen overflow-hidden">
+    <!-- Top Bar -->
+    <div class="h-16 bg-[#1a1a1a] flex items-center justify-between px-6 border-b border-[#7B2FBE]">
+        <h1 class="text-2xl font-bold text-[#7B2FBE]">Riplify</h1>
+        <div class="flex items-center space-x-4">
+            <input type="text" id="playlistSearch" placeholder="Search playlists..." class="bg-[#2a2a2a] border border-gray-700 rounded-full px-4 py-1 text-sm focus:outline-none focus:border-[#7B2FBE]">
+            <a href="/settings" class="text-gray-400 hover:text-white transition">Settings</a>
+            <a href="/logout" class="text-gray-400 hover:text-white transition">Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- Sidebar: Playlists -->
+        <div class="w-72 bg-[#141414] border-r border-gray-800 flex flex-col overflow-hidden">
+            <div class="p-4 font-semibold text-gray-500 uppercase text-xs tracking-wider">Your Library</div>
+            <div id="playlistList" class="flex-1 overflow-y-auto custom-scrollbar">
+                <div id="likedSongsBtn" class="flex items-center p-3 hover:bg-[#2a2a2a] cursor-pointer transition border-l-4 border-transparent hover:border-[#7B2FBE]">
+                    <div class="w-10 h-10 bg-gradient-to-br from-indigo-700 to-blue-300 flex items-center justify-center mr-3 rounded shadow-md">
+                        <span class="text-xl">❤️</span>
+                    </div>
+                    <div>
+                        <div class="font-medium text-sm">Liked Songs</div>
+                    </div>
+                </div>
+                <!-- Playlists will be injected here -->
+            </div>
+        </div>
+
+        <!-- Main View: Tracks -->
+        <div class="flex-1 bg-[#0f0f0f] flex flex-col overflow-hidden">
+            <div id="tracksHeader" class="p-8 flex items-end space-x-6 bg-gradient-to-b from-[#1e1e1e] to-[#0f0f0f] border-b border-gray-800">
+                <div id="tracksCover" class="w-48 h-48 bg-[#2a2a2a] shadow-2xl rounded-lg"></div>
+                <div class="flex-1">
+                    <div class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Playlist</div>
+                    <h2 id="tracksTitle" class="text-5xl font-extrabold mb-4">Select a playlist</h2>
+                    <div id="tracksMeta" class="text-sm text-gray-400"></div>
+                    <div id="playlistActions" class="mt-6 flex space-x-4 hidden">
+                        <button id="downloadPlaylistBtn" class="bg-[#7B2FBE] hover:bg-[#9B59B6] text-white font-bold py-2 px-6 rounded-full transition">Download All</button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <table class="w-full text-left text-gray-400 text-sm">
+                    <thead class="sticky top-0 bg-[#0f0f0f] border-b border-gray-800 text-xs uppercase font-bold text-gray-500">
+                        <tr>
+                            <th class="px-6 py-3 w-12 text-center">#</th>
+                            <th class="px-6 py-3">Title</th>
+                            <th class="px-6 py-3">Album</th>
+                            <th class="px-6 py-3 w-32">Duration</th>
+                            <th class="px-6 py-3 w-24"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="trackList">
+                        <!-- Tracks will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Panel: Download Queue -->
+    <div id="queuePanel" class="h-48 bg-[#1a1a1a] border-t border-[#7B2FBE] flex flex-col overflow-hidden">
+        <div class="px-6 py-2 border-b border-gray-800 flex justify-between items-center bg-[#242424]">
+            <span class="font-bold text-sm text-[#9B59B6]">Download Queue</span>
+            <span id="queueCount" class="text-xs text-gray-500">0 items</span>
+        </div>
+        <div id="queueList" class="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-2">
+            <!-- Queue items will be injected here -->
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
