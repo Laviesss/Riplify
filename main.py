@@ -24,7 +24,7 @@ class SetupDialog(QDialog):
         instruction = QLabel(
             "<b>Spotify Credentials Required</b><br><br>"
             "Go to <a href='https://developer.spotify.com'>developer.spotify.com</a>, create a new app,<br>"
-            "set the Redirect URI to <b>http://localhost:5174/callback</b>,<br>"
+            "set the Redirect URI to <b>http://127.0.0.1:5174/callback</b>,<br>"
             "then copy your Client ID and Secret below."
         )
         instruction.setOpenExternalLinks(True)
@@ -57,7 +57,7 @@ def check_ffmpeg():
         return False
 
 def run_flask():
-    app.run(port=5174, threaded=True, use_reloader=False)
+    app.run(host="127.0.0.1", port=5174, threaded=True, use_reloader=False)
 
 class RiplifyWindow(QMainWindow):
     def __init__(self):
@@ -78,7 +78,7 @@ class RiplifyWindow(QMainWindow):
         if os.path.exists("music_note.png"):
             self.setWindowIcon(QIcon("music_note.png"))
 
-        self.web_view.load(QUrl("http://localhost:5174"))
+        self.web_view.load(QUrl("http://127.0.0.1:5174"))
 
 def main():
     qt_app = QApplication(sys.argv)

@@ -34,7 +34,7 @@ The app runs a **Flask** backend locally and displays the UI inside a **PyQt6** 
   - Windows: `choco install ffmpeg` or download from [ffmpeg.org](https://ffmpeg.org).
   - Linux: `sudo apt install ffmpeg` or your distribution's package manager.
 - **Spotify Developer Credentials**: You need a Client ID and Client Secret from the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
-  - Create a new app and set the **Redirect URI** to: `http://localhost:5174/callback`
+  - Create a new app and set the **Redirect URI** to: `http://127.0.0.1:5174/callback`
 
 ## Setup & Installation
 

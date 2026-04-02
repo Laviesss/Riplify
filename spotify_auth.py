@@ -7,7 +7,7 @@ load_dotenv()
 
 CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
 CLIENT_SECRET = os.getenv("SPOTIPY_CLIENT_SECRET")
-REDIRECT_URI = "http://localhost:5174/callback"
+REDIRECT_URI = "http://127.0.0.1:5174/callback"
 CACHE_PATH = CONFIG_DIR / "spotify_token.json"
 SCOPE = "playlist-read-private playlist-read-collaborative user-library-read"
 
