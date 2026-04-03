@@ -1,5 +1,6 @@
 flask
 spotdl
+spotifyscraper
 PyQt6
 PyQt6-WebEngine
 python-dotenv

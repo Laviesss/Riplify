@@ -79,13 +79,13 @@
                     <!-- Collapsible Instructions -->
                     <div class="bg-[#000] border border-white/5 rounded-md overflow-hidden">
                         <button id="toggleInstructions" class="w-full px-4 py-3 flex justify-between items-center text-sm font-bold text-gray-300 hover:text-white hover:bg-[#1a1a1a] transition-all">
-                            <span>How to export your Spotify data?</span>
+                            <span>How to get your Spotify data export?</span>
                             <svg id="instArrow" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                         <div id="instructionsContent" class="hidden px-6 py-6 text-sm text-gray-400 space-y-4 bg-[#0a0a0a] border-t border-white/5">
                             <p class="leading-relaxed">1. Go to <a href="https://www.spotify.com/account/privacy" target="_blank" class="text-[#1DB954] hover:underline">spotify.com/account/privacy</a></p>
                             <p class="leading-relaxed">2. Scroll to <span class="text-white font-medium">Download your data</span> and check <span class="text-white font-medium">Account data</span>.</p>
-                            <p class="leading-relaxed">3. Click <span class="text-white font-medium">Request data</span>. Spotify will prepare your data (can take up to 30 days, usually a few).</p>
+                            <p class="leading-relaxed">3. Click <span class="text-white font-medium">Request data</span>. Spotify will prepare your data (usually takes a few hours to days).</p>
                             <p class="leading-relaxed">4. You will receive an email. Download the zip and extract it.</p>
                             <p class="leading-relaxed">5. Select the extracted folder path above. It should contain files like <span class="font-mono text-xs bg-[#1a1a1a] px-1 rounded">Playlist1.json</span> and <span class="font-mono text-xs bg-[#1a1a1a] px-1 rounded">YourLibrary.json</span>.</p>
                         </div>
@@ -124,7 +124,6 @@
             .then(res => res.json())
             .then(res => {
                 if (res.status === 'ok') {
-                    // Custom notification style alert? Let's just use alert for now as requested
                     alert('Settings saved successfully!');
                 }
             });

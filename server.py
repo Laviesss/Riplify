@@ -3,6 +3,7 @@ import os
 from downloader import download_manager
 from config import load_config, save_config
 from spotify_import import load_playlists, load_liked_songs
+from spotify_scraper_client import scraper_client
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -16,7 +17,7 @@ def api_playlists():
     config = load_config()
     export_folder = config.get("spotify_export_folder")
     playlists = load_playlists(export_folder)
-    # Don't send all tracks to save bandwidth in the list view
+    # Return summary
     summary = []
     for p in playlists:
         summary.append({
@@ -33,7 +34,6 @@ def api_playlist_tracks(id):
     export_folder = config.get("spotify_export_folder")
     playlists = load_playlists(export_folder)
 
-    # Find the playlist by our generated slug ID
     playlist = next((p for p in playlists if p["id"] == id), None)
     if not playlist:
         return jsonify({"error": "not found"}), 404
@@ -47,30 +47,54 @@ def api_library():
     tracks = load_liked_songs(export_folder)
     return jsonify(tracks)
 
+@app.route("/api/search")
+def api_search():
+    query = request.args.get("q", "")
+    if not query:
+        return jsonify([])
+    results = scraper_client.search(query)
+    return jsonify(results)
+
+@app.route("/api/load-url", methods=["POST"])
+def api_load_url():
+    url = request.json.get("url", "")
+    if not url:
+        return jsonify({"error": "No URL"}), 400
+
+    res = {"type": "unknown", "name": "Unknown", "tracks": []}
+    if "/playlist/" in url:
+        data = scraper_client.get_playlist(url)
+        res = {"type": "playlist", "name": data["name"], "tracks": data["tracks"]}
+    elif "/album/" in url:
+        data = scraper_client.get_album(url)
+        res = {"type": "album", "name": data["name"], "tracks": data["tracks"]}
+    elif "/track/" in url:
+        data = scraper_client.get_track(url)
+        if data:
+            res = {"type": "track", "name": data["name"], "tracks": [data]}
+    elif "/artist/" in url:
+        data = scraper_client.get_artist_top_tracks(url)
+        res = {"type": "artist", "name": data["name"], "tracks": data["tracks"]}
+
+    return jsonify(res)
+
 @app.route("/api/download", methods=["POST"])
 def api_download():
     data = request.json
-    task_type = data.get("type") # "track" or "playlist"
-    item_id = data.get("id")
+    task_type = data.get("type") # "track" or "playlist" (batch)
     name = data.get("name", "Unknown")
 
-    if task_type not in ["track", "playlist"]:
-        return jsonify({"error": "invalid type"}), 400
-
     if task_type == "playlist":
-        # For local exports, we should queue each track in the playlist individually
-        # to respect the concurrency limit, since we already have the track list.
-        config = load_config()
-        export_folder = config.get("spotify_export_folder")
-        playlists = load_playlists(export_folder)
-        playlist = next((p for p in playlists if p["id"] == item_id), None)
-        if playlist:
-            for track in playlist["tracks"]:
-                download_manager.add_task("track", track["uri"], f"{track['artist']} - {track['name']}")
-            return jsonify({"status": "queued_all"})
-        return jsonify({"error": "playlist not found"}), 404
+        tracks = data.get("tracks", [])
+        for t in tracks:
+            download_manager.add_task("track", t["uri"], f"{t['artist']} - {t['name']}")
+        return jsonify({"status": "queued_all"})
 
-    task_id = download_manager.add_task(task_type, item_id, name)
+    uri = data.get("uri")
+    if not uri:
+        return jsonify({"error": "No URI"}), 400
+
+    task_id = download_manager.add_task("track", uri, name)
     return jsonify({"task_id": task_id})
 
 @app.route("/api/download/status")
