@@ -1,116 +1,50 @@
-from flask import Flask, redirect, url_for, session, request, jsonify, render_template
+from flask import Flask, redirect, url_for, request, jsonify, render_template
 import os
-import spotipy
-from spotify_auth import get_spotify_oauth
 from downloader import download_manager
 from config import load_config, save_config
-from dotenv import set_key
+from spotify_import import load_playlists, load_liked_songs
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-def get_spotify():
-    auth_manager = get_spotify_oauth()
-    if not auth_manager.validate_token(auth_manager.cache_handler.get_cached_token()):
-        return None
-    return spotipy.Spotify(auth_manager=auth_manager)
-
 @app.route("/")
 def index():
-    if not get_spotify():
-        return redirect(url_for("login"))
     return render_template("index.html")
-
-@app.route("/login")
-def login():
-    auth_manager = get_spotify_oauth()
-    auth_url = auth_manager.get_authorize_url()
-    return render_template("login.html", auth_url=auth_url)
-
-@app.route("/callback")
-def callback():
-    auth_manager = get_spotify_oauth()
-    auth_manager.get_access_token(request.args.get("code"))
-    return redirect(url_for("index"))
-
-@app.route("/logout")
-def logout():
-    auth_manager = get_spotify_oauth()
-    if os.path.exists(auth_manager.cache_handler.cache_path):
-        os.remove(auth_manager.cache_handler.cache_path)
-    return redirect(url_for("login"))
 
 @app.route("/api/playlists")
 def api_playlists():
-    sp = get_spotify()
-    if not sp:
-        return jsonify({"error": "unauthorized"}), 401
+    config = load_config()
+    export_folder = config.get("spotify_export_folder")
+    playlists = load_playlists(export_folder)
+    # Don't send all tracks to save bandwidth in the list view
+    summary = []
+    for p in playlists:
+        summary.append({
+            "id": p["id"],
+            "name": p["name"],
+            "count": p["count"],
+            "image": None
+        })
+    return jsonify(summary)
 
-    playlists = []
-    results = sp.current_user_playlists()
-    while results:
-        for item in results["items"]:
-            playlists.append({
-                "id": item["id"],
-                "name": item["name"],
-                "count": item["tracks"]["total"],
-                "image": item["images"][0]["url"] if item["images"] else None
-            })
-        if results["next"]:
-            results = sp.next(results)
-        else:
-            results = None
-    return jsonify(playlists)
+@app.route("/api/playlist/<id>")
+def api_playlist_tracks(id):
+    config = load_config()
+    export_folder = config.get("spotify_export_folder")
+    playlists = load_playlists(export_folder)
 
-@app.route("/api/playlist/<playlist_id>")
-def api_playlist_tracks(playlist_id):
-    sp = get_spotify()
-    if not sp:
-        return jsonify({"error": "unauthorized"}), 401
+    # Find the playlist by our generated slug ID
+    playlist = next((p for p in playlists if p["id"] == id), None)
+    if not playlist:
+        return jsonify({"error": "not found"}), 404
 
-    tracks = []
-    results = sp.playlist_tracks(playlist_id)
-    while results:
-        for item in results["items"]:
-            if not item["track"]: continue
-            track = item["track"]
-            tracks.append({
-                "id": track["id"],
-                "name": track["name"],
-                "artist": ", ".join([a["name"] for a in track["artists"]]),
-                "album": track["album"]["name"],
-                "duration": track["duration_ms"],
-                "image": track["album"]["images"][0]["url"] if track["album"]["images"] else None
-            })
-        if results["next"]:
-            results = sp.next(results)
-        else:
-            results = None
-    return jsonify(tracks)
+    return jsonify(playlist["tracks"])
 
 @app.route("/api/library")
 def api_library():
-    sp = get_spotify()
-    if not sp:
-        return jsonify({"error": "unauthorized"}), 401
-
-    tracks = []
-    results = sp.current_user_saved_tracks()
-    while results:
-        for item in results["items"]:
-            track = item["track"]
-            tracks.append({
-                "id": track["id"],
-                "name": track["name"],
-                "artist": ", ".join([a["name"] for a in track["artists"]]),
-                "album": track["album"]["name"],
-                "duration": track["duration_ms"],
-                "image": track["album"]["images"][0]["url"] if track["album"]["images"] else None
-            })
-        if results["next"]:
-            results = sp.next(results)
-        else:
-            results = None
+    config = load_config()
+    export_folder = config.get("spotify_export_folder")
+    tracks = load_liked_songs(export_folder)
     return jsonify(tracks)
 
 @app.route("/api/download", methods=["POST"])
@@ -123,6 +57,19 @@ def api_download():
     if task_type not in ["track", "playlist"]:
         return jsonify({"error": "invalid type"}), 400
 
+    if task_type == "playlist":
+        # For local exports, we should queue each track in the playlist individually
+        # to respect the concurrency limit, since we already have the track list.
+        config = load_config()
+        export_folder = config.get("spotify_export_folder")
+        playlists = load_playlists(export_folder)
+        playlist = next((p for p in playlists if p["id"] == item_id), None)
+        if playlist:
+            for track in playlist["tracks"]:
+                download_manager.add_task("track", track["uri"], f"{track['artist']} - {track['name']}")
+            return jsonify({"status": "queued_all"})
+        return jsonify({"error": "playlist not found"}), 404
+
     task_id = download_manager.add_task(task_type, item_id, name)
     return jsonify({"task_id": task_id})
 
@@ -133,25 +80,11 @@ def api_download_status():
 @app.route("/settings")
 def settings_page():
     config = load_config()
-    config["spotify_client_id"] = os.getenv("SPOTIPY_CLIENT_ID", "")
-    config["spotify_client_secret"] = os.getenv("SPOTIPY_CLIENT_SECRET", "")
     return render_template("settings.html", config=config)
 
 @app.route("/api/settings", methods=["POST"])
 def api_save_settings():
     data = request.json
-
-    # Extract spotify credentials if present
-    spotify_id = data.pop("spotify_client_id", None)
-    spotify_secret = data.pop("spotify_client_secret", None)
-
-    if spotify_id and spotify_secret:
-        env_path = os.path.join(os.getcwd(), ".env")
-        set_key(env_path, "SPOTIPY_CLIENT_ID", spotify_id)
-        set_key(env_path, "SPOTIPY_CLIENT_SECRET", spotify_secret)
-        os.environ["SPOTIPY_CLIENT_ID"] = spotify_id
-        os.environ["SPOTIPY_CLIENT_SECRET"] = spotify_secret
-
     save_config(data)
     return jsonify({"status": "ok"})
 

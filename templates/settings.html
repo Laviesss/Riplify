@@ -7,82 +7,113 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/style.css">
 </head>
-<body class="bg-[#0f0f0f] text-white flex flex-col h-screen">
-    <div class="h-16 bg-[#1a1a1a] flex items-center justify-between px-6 border-b border-[#7B2FBE]">
-        <h1 class="text-2xl font-bold text-[#7B2FBE]">Settings</h1>
-        <a href="/" class="text-gray-400 hover:text-white transition">&larr; Back to Library</a>
+<body class="bg-[#0f0f0f] text-white flex flex-col h-screen overflow-hidden">
+    <!-- Top Bar -->
+    <div class="h-16 bg-[#1a1a1a] flex items-center justify-between px-6 border-b border-[#282828] z-20">
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-[#7B2FBE] rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">R</div>
+            <h1 class="text-xl font-bold tracking-tight">Settings</h1>
+        </div>
+        <a href="/" class="text-sm font-bold text-gray-400 hover:text-white hover:scale-105 transition-all">&larr; Back to Library</a>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-12">
-        <div class="max-w-2xl mx-auto space-y-8">
-            <section class="bg-[#1a1a1a] p-8 rounded-lg border border-gray-800 shadow-2xl">
-                <h3 class="text-xl font-bold mb-6 text-[#7B2FBE] flex items-center">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    Download Configuration
-                </h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Output Folder</label>
-                        <input type="text" id="output_folder" value="{{ config.output_folder }}" class="w-full bg-[#2a2a2a] border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:border-[#7B2FBE]">
+    <div class="flex-1 overflow-y-auto p-12 custom-scrollbar bg-[#121212]">
+        <div class="max-w-3xl mx-auto space-y-8 fade-in">
+            <!-- Download Section -->
+            <section class="settings-card">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-[#7B2FBE]/10 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-5 h-5 text-[#7B2FBE]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <h3 class="text-xl font-bold tracking-tight">Download Configuration</h3>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Output Folder</label>
+                        <input type="text" id="output_folder" value="{{ config.output_folder }}" class="w-full bg-[#2a2a2a] border border-transparent rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-white focus:outline-none transition-all hover:bg-[#333]">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-400 mb-1">Audio Format</label>
-                            <select id="audio_format" class="w-full bg-[#2a2a2a] border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:border-[#7B2FBE]">
-                                <option value="mp3" {% if config.audio_format == 'mp3' %}selected{% endif %}>MP3</option>
-                                <option value="flac" {% if config.audio_format == 'flac' %}selected{% endif %}>FLAC</option>
-                                <option value="m4a" {% if config.audio_format == 'm4a' %}selected{% endif %}>M4A</option>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Audio Format</label>
+                            <select id="audio_format" class="w-full bg-[#2a2a2a] border-none rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-white focus:outline-none transition-all hover:bg-[#333]">
+                                <option value="mp3" {% if config.audio_format == 'mp3' %}selected{% endif %}>MP3 (Standard)</option>
+                                <option value="flac" {% if config.audio_format == 'flac' %}selected{% endif %}>FLAC (Lossless)</option>
+                                <option value="m4a" {% if config.audio_format == 'm4a' %}selected{% endif %}>M4A (High Quality)</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-400 mb-1">Audio Quality</label>
-                            <select id="audio_quality" class="w-full bg-[#2a2a2a] border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:border-[#7B2FBE]">
-                                <option value="128kbps" {% if config.audio_quality == '128kbps' %}selected{% endif %}>128 kbps</option>
-                                <option value="192kbps" {% if config.audio_quality == '192kbps' %}selected{% endif %}>192 kbps</option>
-                                <option value="256kbps" {% if config.audio_quality == '256kbps' %}selected{% endif %}>256 kbps</option>
-                                <option value="320kbps" {% if config.audio_quality == '320kbps' %}selected{% endif %}>320 kbps</option>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Audio Quality</label>
+                            <select id="audio_quality" class="w-full bg-[#2a2a2a] border-none rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-white focus:outline-none transition-all hover:bg-[#333]">
+                                <option value="128kbps" {% if config.audio_quality == '128kbps' %}selected{% endif %}>128 kbps (Light)</option>
+                                <option value="192kbps" {% if config.audio_quality == '192kbps' %}selected{% endif %}>192 kbps (Medium)</option>
+                                <option value="256kbps" {% if config.audio_quality == '256kbps' %}selected{% endif %}>256 kbps (High)</option>
+                                <option value="320kbps" {% if config.audio_quality == '320kbps' %}selected{% endif %}>320 kbps (Extreme)</option>
                             </select>
                         </div>
                     </div>
+
                     <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">FFmpeg Path</label>
-                        <input type="text" id="ffmpeg_path" value="{{ config.ffmpeg_path }}" class="w-full bg-[#2a2a2a] border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:border-[#7B2FBE]">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">FFmpeg Path</label>
+                        <input type="text" id="ffmpeg_path" value="{{ config.ffmpeg_path }}" class="w-full bg-[#2a2a2a] border-none rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-white focus:outline-none transition-all hover:bg-[#333]">
                     </div>
                 </div>
             </section>
 
-            <section class="bg-[#1a1a1a] p-8 rounded-lg border border-gray-800 shadow-2xl">
-                <h3 class="text-xl font-bold mb-6 text-[#7B2FBE] flex items-center">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    Spotify Credentials
-                </h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Spotify Client ID</label>
-                        <input type="text" id="spotify_client_id" value="{{ config.spotify_client_id }}" class="w-full bg-[#2a2a2a] border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:border-[#7B2FBE]">
+            <!-- Export Section -->
+            <section class="settings-card">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-[#1DB954]/10 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-5 h-5 text-[#1DB954]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                     </div>
+                    <h3 class="text-xl font-bold tracking-tight">Spotify Data Import</h3>
+                </div>
+
+                <div class="space-y-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Spotify Client Secret</label>
-                        <input type="password" id="spotify_client_secret" value="{{ config.spotify_client_secret }}" class="w-full bg-[#2a2a2a] border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:border-[#7B2FBE]">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Spotify Export Folder</label>
+                        <input type="text" id="spotify_export_folder" value="{{ config.spotify_export_folder }}" placeholder="/path/to/extracted/export" class="w-full bg-[#2a2a2a] border-none rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-white focus:outline-none transition-all hover:bg-[#333]">
+                    </div>
+
+                    <!-- Collapsible Instructions -->
+                    <div class="bg-[#000] border border-white/5 rounded-md overflow-hidden">
+                        <button id="toggleInstructions" class="w-full px-4 py-3 flex justify-between items-center text-sm font-bold text-gray-300 hover:text-white hover:bg-[#1a1a1a] transition-all">
+                            <span>How to export your Spotify data?</span>
+                            <svg id="instArrow" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="instructionsContent" class="hidden px-6 py-6 text-sm text-gray-400 space-y-4 bg-[#0a0a0a] border-t border-white/5">
+                            <p class="leading-relaxed">1. Go to <a href="https://www.spotify.com/account/privacy" target="_blank" class="text-[#1DB954] hover:underline">spotify.com/account/privacy</a></p>
+                            <p class="leading-relaxed">2. Scroll to <span class="text-white font-medium">Download your data</span> and check <span class="text-white font-medium">Account data</span>.</p>
+                            <p class="leading-relaxed">3. Click <span class="text-white font-medium">Request data</span>. Spotify will prepare your data (can take up to 30 days, usually a few).</p>
+                            <p class="leading-relaxed">4. You will receive an email. Download the zip and extract it.</p>
+                            <p class="leading-relaxed">5. Select the extracted folder path above. It should contain files like <span class="font-mono text-xs bg-[#1a1a1a] px-1 rounded">Playlist1.json</span> and <span class="font-mono text-xs bg-[#1a1a1a] px-1 rounded">YourLibrary.json</span>.</p>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <div class="flex justify-end space-x-4">
-                <button id="saveSettingsBtn" class="bg-[#7B2FBE] hover:bg-[#9B59B6] text-white font-bold py-3 px-10 rounded-full transition shadow-lg">Save Settings</button>
+            <div class="flex justify-end pt-4 pb-12">
+                <button id="saveSettingsBtn" class="bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold py-3 px-12 rounded-full transition-all transform hover:scale-105 shadow-xl">Save Changes</button>
             </div>
         </div>
     </div>
 
     <script>
+        document.getElementById('toggleInstructions').addEventListener('click', () => {
+            const content = document.getElementById('instructionsContent');
+            const arrow = document.getElementById('instArrow');
+            content.classList.toggle('hidden');
+            arrow.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+
         document.getElementById('saveSettingsBtn').addEventListener('click', () => {
             const data = {
                 output_folder: document.getElementById('output_folder').value,
                 audio_format: document.getElementById('audio_format').value,
                 audio_quality: document.getElementById('audio_quality').value,
                 ffmpeg_path: document.getElementById('ffmpeg_path').value,
-                spotify_client_id: document.getElementById('spotify_client_id').value,
-                spotify_client_secret: document.getElementById('spotify_client_secret').value
+                spotify_export_folder: document.getElementById('spotify_export_folder').value
             };
 
             fetch('/api/settings', {
@@ -93,6 +124,7 @@
             .then(res => res.json())
             .then(res => {
                 if (res.status === 'ok') {
+                    // Custom notification style alert? Let's just use alert for now as requested
                     alert('Settings saved successfully!');
                 }
             });
