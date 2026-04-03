@@ -4,49 +4,13 @@ import threading
 import subprocess
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget,
-    QMessageBox, QDialog, QLabel, QLineEdit, QPushButton,
-    QFormLayout, QHBoxLayout
+    QMessageBox
 )
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtCore import QUrl, Qt
-from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtGui import QIcon
 from server import app
-from dotenv import set_key, load_dotenv
-
-class SetupDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Riplify - First Run Setup")
-        self.setFixedSize(450, 300)
-
-        layout = QVBoxLayout(self)
-
-        instruction = QLabel(
-            "<b>Spotify Credentials Required</b><br><br>"
-            "Go to <a href='https://developer.spotify.com'>developer.spotify.com</a>, create a new app,<br>"
-            "set the Redirect URI to <b>http://127.0.0.1:5174/callback</b>,<br>"
-            "then copy your Client ID and Secret below."
-        )
-        instruction.setOpenExternalLinks(True)
-        instruction.setWordWrap(True)
-        layout.addWidget(instruction)
-
-        form = QFormLayout()
-        self.client_id = QLineEdit()
-        self.client_secret = QLineEdit()
-        form.addRow("Client ID:", self.client_id)
-        form.addRow("Client Secret:", self.client_secret)
-        layout.addLayout(form)
-
-        btn_layout = QHBoxLayout()
-        self.save_btn = QPushButton("Save & Continue")
-        self.save_btn.clicked.connect(self.accept)
-        btn_layout.addStretch()
-        btn_layout.addWidget(self.save_btn)
-        layout.addLayout(btn_layout)
-
-    def get_credentials(self):
-        return self.client_id.text().strip(), self.client_secret.text().strip()
+from config import load_config
 
 def check_ffmpeg():
     # Try running ffmpeg -version
@@ -83,26 +47,7 @@ class RiplifyWindow(QMainWindow):
 def main():
     qt_app = QApplication(sys.argv)
 
-    # 1. Check for .env
-    load_dotenv()
-    if not os.getenv("SPOTIPY_CLIENT_ID") or not os.getenv("SPOTIPY_CLIENT_SECRET"):
-        dialog = SetupDialog()
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            cid, csec = dialog.get_credentials()
-            if cid and csec:
-                env_path = os.path.join(os.getcwd(), ".env")
-                set_key(env_path, "SPOTIPY_CLIENT_ID", cid)
-                set_key(env_path, "SPOTIPY_CLIENT_SECRET", csec)
-                # Reload env
-                os.environ["SPOTIPY_CLIENT_ID"] = cid
-                os.environ["SPOTIPY_CLIENT_SECRET"] = csec
-            else:
-                QMessageBox.critical(None, "Error", "Client ID and Secret are required.")
-                sys.exit(1)
-        else:
-            sys.exit(0)
-
-    # 2. Check for FFmpeg
+    # 1. Check for FFmpeg
     if not check_ffmpeg():
         QMessageBox.critical(
             None,
@@ -112,10 +57,19 @@ def main():
             "- Windows: Install via 'choco install ffmpeg' or download from ffmpeg.org\n"
             "- Linux: 'sudo apt install ffmpeg' or similar"
         )
-        # We don't exit if missing, just show error as requested,
-        # but user might have specified path in config later.
-        # Actually objective says "Only open the main window after both checks pass".
         sys.exit(1)
+
+    # 2. Check for export folder config
+    config = load_config()
+    if not config.get("spotify_export_folder"):
+        QMessageBox.information(
+            None,
+            "Setup Required",
+            "To use Riplify, export your Spotify data:\n\n"
+            "1. Go to spotify.com -> Account -> Privacy -> Download your data\n"
+            "2. Check 'Account data', click Request\n"
+            "3. Extract the zip and select the folder in Settings"
+        )
 
     # 3. Start Flask in daemon thread
     flask_thread = threading.Thread(target=run_flask, daemon=True)
