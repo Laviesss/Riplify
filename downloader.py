@@ -12,7 +12,7 @@ class DownloadTask:
     def __init__(self, task_type, item_id, name):
         self.id = f"{task_type}_{int(time.time())}_{name[:10]}"
         self.type = task_type
-        self.item_id = item_id # For "track", this is the URI (spotify:track:XXXX)
+        self.item_id = item_id # URI or URL
         self.name = name
         self.status = "queued" # queued, downloading, done, error
         self.progress = 0
@@ -69,17 +69,13 @@ class DownloadManager:
                 downloader_settings=downloader_settings
             )
 
-            # Convert URI to URL if needed
-            # URIs look like: spotify:track:XXXX
-            # URLs look like: https://open.spotify.com/track/XXXX
-            if "spotify:track:" in str(task.item_id):
-                track_id = task.item_id.split(":")[-1]
-                url = f"https://open.spotify.com/track/{track_id}"
-            else:
-                # Fallback if it's already a URL or just an ID
-                url = str(task.item_id)
-                if not url.startswith("http"):
-                    url = f"https://open.spotify.com/{task.type}/{url}"
+            # Convert URI to URL
+            # spotify:track:XXXX -> https://open.spotify.com/track/XXXX
+            url = str(task.item_id)
+            if url.startswith("spotify:"):
+                parts = url.split(":")
+                if len(parts) >= 3:
+                    url = f"https://open.spotify.com/{parts[1]}/{parts[2]}"
 
             songs = sdl.search([url])
 
