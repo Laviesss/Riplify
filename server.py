@@ -3,6 +3,7 @@ import os
 from downloader import download_manager
 from config import load_config, save_config
 from spotify_import import load_playlists, load_liked_songs
+from spotify_scraper_client import scraper_client
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -16,7 +17,7 @@ def api_playlists():
     config = load_config()
     export_folder = config.get("spotify_export_folder")
     playlists = load_playlists(export_folder)
-    # Don't send all tracks to save bandwidth in the list view
+    # Return summary
     summary = []
     for p in playlists:
         summary.append({
@@ -33,7 +34,6 @@ def api_playlist_tracks(id):
     export_folder = config.get("spotify_export_folder")
     playlists = load_playlists(export_folder)
 
-    # Find the playlist by our generated slug ID
     playlist = next((p for p in playlists if p["id"] == id), None)
     if not playlist:
         return jsonify({"error": "not found"}), 404
@@ -87,27 +87,17 @@ def api_download():
     if task_type == "playlist":
         tracks = data.get("tracks", [])
         for t in tracks:
-            download_manager.add_task("track", t["uri"], f"{t['artist']} - {t['name']}")
+            # Ensure URI exists for each track in batch
+            uri = t.get("uri")
+            if uri:
+                download_manager.add_task("track", uri, f"{t.get('artist', 'Unknown')} - {t.get('name', 'Unknown')}")
         return jsonify({"status": "queued_all"})
 
     uri = data.get("uri")
     if not uri:
         return jsonify({"error": "No URI"}), 400
 
-    if task_type == "playlist":
-        # For local exports, we should queue each track in the playlist individually
-        # to respect the concurrency limit, since we already have the track list.
-        config = load_config()
-        export_folder = config.get("spotify_export_folder")
-        playlists = load_playlists(export_folder)
-        playlist = next((p for p in playlists if p["id"] == item_id), None)
-        if playlist:
-            for track in playlist["tracks"]:
-                download_manager.add_task("track", track["uri"], f"{track['artist']} - {track['name']}")
-            return jsonify({"status": "queued_all"})
-        return jsonify({"error": "playlist not found"}), 404
-
-    task_id = download_manager.add_task(task_type, item_id, name)
+    task_id = download_manager.add_task("track", uri, name)
     return jsonify({"task_id": task_id})
 
 @app.route("/api/download/status")

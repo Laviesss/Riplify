@@ -61,18 +61,34 @@
                 </div>
             </section>
 
-            <section class="bg-[#1a1a1a] p-8 rounded-lg border border-gray-800 shadow-2xl">
-                <h3 class="text-xl font-bold mb-6 text-[#7B2FBE] flex items-center">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                    Spotify Data Export
-                </h3>
-                <div class="space-y-4">
+            <!-- Export Section -->
+            <section class="settings-card">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 bg-[#1DB954]/10 rounded-full flex items-center justify-center mr-4">
+                        <svg class="w-5 h-5 text-[#1DB954]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold tracking-tight">Spotify Data Import</h3>
+                </div>
+
+                <div class="space-y-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Spotify Export Folder</label>
-                        <div class="flex space-x-2">
-                            <input type="text" id="spotify_export_folder" value="{{ config.spotify_export_folder }}" placeholder="/path/to/extracted/export" class="flex-1 bg-[#2a2a2a] border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:border-[#7B2FBE]">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Spotify Export Folder</label>
+                        <input type="text" id="spotify_export_folder" value="{{ config.spotify_export_folder }}" placeholder="/path/to/extracted/export" class="w-full bg-[#2a2a2a] border-none rounded-md px-4 py-3 text-sm focus:ring-2 focus:ring-white focus:outline-none transition-all hover:bg-[#333]">
+                    </div>
+
+                    <!-- Collapsible Instructions -->
+                    <div class="bg-[#000] border border-white/5 rounded-md overflow-hidden">
+                        <button id="toggleInstructions" class="w-full px-4 py-3 flex justify-between items-center text-sm font-bold text-gray-300 hover:text-white hover:bg-[#1a1a1a] transition-all">
+                            <span>How to get your Spotify data export?</span>
+                            <svg id="instArrow" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div id="instructionsContent" class="hidden px-6 py-6 text-sm text-gray-400 space-y-4 bg-[#0a0a0a] border-t border-white/5">
+                            <p class="leading-relaxed">1. Go to <a href="https://www.spotify.com/account/privacy" target="_blank" class="text-[#1DB954] hover:underline">spotify.com/account/privacy</a></p>
+                            <p class="leading-relaxed">2. Scroll to <span class="text-white font-medium">Download your data</span> and check <span class="text-white font-medium">Account data</span>.</p>
+                            <p class="leading-relaxed">3. Click <span class="text-white font-medium">Request data</span>. Spotify will prepare your data (usually takes a few hours to days).</p>
+                            <p class="leading-relaxed">4. You will receive an email. Download the zip and extract it.</p>
+                            <p class="leading-relaxed">5. Select the extracted folder path above. It should contain files like <span class="font-mono text-xs bg-[#1a1a1a] px-1 rounded">Playlist1.json</span> and <span class="font-mono text-xs bg-[#1a1a1a] px-1 rounded">YourLibrary.json</span>.</p>
                         </div>
-                        <p class="mt-2 text-xs text-gray-500">Extract your Spotify data export zip and select the folder here. It should contain MyData/ or Playlist1.json files.</p>
                     </div>
                 </div>
             </section>
@@ -84,14 +100,21 @@
     </div>
 
     <script>
-        document.getElementById('toggleInstructions').addEventListener('click', () => {
-            const content = document.getElementById('instructionsContent');
-            const arrow = document.getElementById('instArrow');
-            content.classList.toggle('hidden');
-            arrow.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
-        });
+        const toggleInstructions = document.getElementById('toggleInstructions');
+        if (toggleInstructions) {
+            toggleInstructions.addEventListener('click', () => {
+                const content = document.getElementById('instructionsContent');
+                const arrow = document.getElementById('instArrow');
+                if (content && arrow) {
+                    content.classList.toggle('hidden');
+                    arrow.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+                }
+            });
+        }
 
-        document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        if (saveSettingsBtn) {
+            saveSettingsBtn.addEventListener('click', () => {
             const data = {
                 output_folder: document.getElementById('output_folder').value,
                 audio_format: document.getElementById('audio_format').value,
@@ -100,18 +123,19 @@
                 spotify_export_folder: document.getElementById('spotify_export_folder').value
             };
 
-            fetch('/api/settings', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            })
-            .then(res => res.json())
-            .then(res => {
-                if (res.status === 'ok') {
-                    alert('Settings saved successfully!');
-                }
+                fetch('/api/settings', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status === 'ok') {
+                        alert('Settings saved successfully!');
+                    }
+                });
             });
-        });
+        }
     </script>
 </body>
 </html>
