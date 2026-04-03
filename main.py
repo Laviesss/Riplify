@@ -44,6 +44,7 @@ class RiplifyWindow(QMainWindow):
 def main():
     qt_app = QApplication(sys.argv)
 
+    # 1. Check for FFmpeg
     if not check_ffmpeg():
         QMessageBox.critical(
             None,
@@ -55,15 +56,19 @@ def main():
         )
         sys.exit(1)
 
+    # 2. Check for export folder config
     config = load_config()
     if not config.get("spotify_export_folder"):
         QMessageBox.information(
             None,
             "Setup Required",
-            "Set your Spotify export folder in Settings to access your library.\n"
-            "You can still search and paste URLs without it."
+            "To use Riplify, export your Spotify data:\n\n"
+            "1. Go to spotify.com -> Account -> Privacy -> Download your data\n"
+            "2. Check 'Account data', click Request\n"
+            "3. Extract the zip and select the folder in Settings"
         )
 
+    # 3. Start Flask in daemon thread
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
 
