@@ -10,9 +10,9 @@ load_dotenv()
 
 class DownloadTask:
     def __init__(self, task_type, item_id, name):
-        self.id = f"{task_type}_{item_id}_{int(time.time())}"
+        self.id = f"{task_type}_{int(time.time())}_{name[:10]}"
         self.type = task_type
-        self.item_id = item_id
+        self.item_id = item_id # For "track", this is the URI (spotify:track:XXXX)
         self.name = name
         self.status = "queued" # queued, downloading, done, error
         self.progress = 0
@@ -66,12 +66,21 @@ class DownloadManager:
                 task.progress = 10
 
             sdl = Spotdl(
-                client_id=os.getenv("SPOTIPY_CLIENT_ID"),
-                client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"),
                 downloader_settings=downloader_settings
             )
 
-            url = f"https://open.spotify.com/{task.type}/{task.item_id}"
+            # Convert URI to URL if needed
+            # URIs look like: spotify:track:XXXX
+            # URLs look like: https://open.spotify.com/track/XXXX
+            if "spotify:track:" in str(task.item_id):
+                track_id = task.item_id.split(":")[-1]
+                url = f"https://open.spotify.com/track/{track_id}"
+            else:
+                # Fallback if it's already a URL or just an ID
+                url = str(task.item_id)
+                if not url.startswith("http"):
+                    url = f"https://open.spotify.com/{task.type}/{url}"
+
             songs = sdl.search([url])
 
             if not songs:
@@ -83,7 +92,6 @@ class DownloadManager:
                 task.progress = 30
 
             # Spotdl doesn't easily expose progress via API without deep hooks
-            # We'll simulate some progress or just jump to 100
             sdl.download_songs(songs)
 
             with self.lock:

@@ -53,17 +53,16 @@
 
             <section class="bg-[#1a1a1a] p-8 rounded-lg border border-gray-800 shadow-2xl">
                 <h3 class="text-xl font-bold mb-6 text-[#7B2FBE] flex items-center">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    Spotify Credentials
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    Spotify Data Export
                 </h3>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Spotify Client ID</label>
-                        <input type="text" id="spotify_client_id" value="{{ config.spotify_client_id }}" class="w-full bg-[#2a2a2a] border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:border-[#7B2FBE]">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400 mb-1">Spotify Client Secret</label>
-                        <input type="password" id="spotify_client_secret" value="{{ config.spotify_client_secret }}" class="w-full bg-[#2a2a2a] border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:border-[#7B2FBE]">
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Spotify Export Folder</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="spotify_export_folder" value="{{ config.spotify_export_folder }}" placeholder="/path/to/extracted/export" class="flex-1 bg-[#2a2a2a] border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:border-[#7B2FBE]">
+                        </div>
+                        <p class="mt-2 text-xs text-gray-500">Extract your Spotify data export zip and select the folder here. It should contain MyData/ or Playlist1.json files.</p>
                     </div>
                 </div>
             </section>
@@ -81,8 +80,7 @@
                 audio_format: document.getElementById('audio_format').value,
                 audio_quality: document.getElementById('audio_quality').value,
                 ffmpeg_path: document.getElementById('ffmpeg_path').value,
-                spotify_client_id: document.getElementById('spotify_client_id').value,
-                spotify_client_secret: document.getElementById('spotify_client_secret').value
+                spotify_export_folder: document.getElementById('spotify_export_folder').value
             };
 
             fetch('/api/settings', {
